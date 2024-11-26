@@ -1,5 +1,66 @@
 from tkinter import *
 from web_scrape import app_search
+from time import sleep
+
+class Ball:
+    def __init__(self, canvas, wall, width, color, speed):
+        self.wall = wall
+        self.width = width
+        self.speed = speed
+        self.xspeed = self.speed
+        self.yspeed = 0
+
+        self.id = canvas.create_oval(0,0,self.width,self.width, fill=color)
+
+class LoadBar:
+    def __init__(self, canvas, color, width = 15, speed = 2, padding = 100):
+        self.canvas = canvas
+        self.canvas_width = self.canvas.winfo_width()
+        self.canvas_height = self.canvas.winfo_height()
+        #set width and if the ball has hit the bottom
+        self.width = width
+        # Set the initial speed of the ball
+        self.padding = padding
+        #create an oval of 15x15 px
+        self.balls = []
+        for i in ('t', 'l', 'r', 'r'):
+            self.balls.append(Ball(canvas, i, self.width, color, 2))
+        #move it to the middle of the canvas, 10% from the top
+        
+        self.canvas.move(self.balls[0].id, padding, padding)
+        self.canvas.move(self.balls[1].id, (self.canvas_width - padding), padding)
+        self.canvas.move(self.balls[2].id, (self.canvas_width - padding), (self.canvas_height - padding))
+        self.canvas.move(self.balls[3].id, padding, (self.canvas_height - padding))
+
+
+    def animate_load(self):
+        for ball in self.balls:
+            self.draw(ball)
+
+    def draw(self, ball):
+        # Move the ball by its speed values
+        self.canvas.move(ball.id, ball.xspeed, ball.yspeed)
+        pos = self.canvas.coords(ball.id)
+        
+        # Wall collision detection
+        if pos[1] <= self.padding and (ball.wall != 't' and ball.wall != 'r'):    # Top wall
+            ball.xspeed = abs(ball.speed)
+            ball.yspeed = 0
+            ball.wall = 't'
+        if pos[3] >= (self.canvas_height - self.padding) and ball.wall !='b': # Bottom wall
+            ball.yspeed = 0
+            ball.xspeed = -1*abs(ball.speed)  
+            ball.wall = 'b'
+        if pos[2] >= (self.canvas_width - self.padding) and (ball.wall != 'r' and ball.wall != 'b'):  # Right wall
+            ball.yspeed = abs(ball.speed)
+            ball.xspeed = 0
+            ball.wall = 'r'
+        if pos[0] <= self.padding and (ball.wall != 'l' and ball.wall != 't'):    # Left wall
+            ball.yspeed = -1*abs(ball.speed)
+            ball.xspeed = 0
+            ball.wall = 'l'
+       
+
 
 class Textbox:
     def __init__(self, canvas, color, w=25, posx = None, posy = None):
@@ -58,6 +119,27 @@ class AnLabel:
         self.label = Label(self.canvas, text = "", background=self.canvas.cget("background"))
         self.id = self.canvas.create_window(self.posx, self.posy, window=self.label)
 
+
+class AppResult:
+    def __init__(self, canvas, app, y_pos = 0):
+        self.ypos = y_pos
+        self.canvas = canvas
+        self.height = 100
+        self.yanchor = 150
+        self.body = self.canvas.create_rectangle(0,0,self.canvas.winfo_width(), self.height)
+
+        self.name = AnLabel(self.canvas, "", 0, 0)
+        self.name.label.config(text = app["title"]) 
+        
+        self.name.label.place(x= 250 - self.name.label.winfo_width(), y =  ((self.yanchor + 10) + (self.height*y_pos)))
+        
+
+        test = self.canvas.create_oval(0,0,15,15, fill="red")
+        self.canvas.move(test, 75, ((self.yanchor) + (self.height*y_pos)))
+
+        self.canvas.move(self.body, 0, (self.yanchor + (self.height*y_pos)))
+        
+
 # Create the main window and canvas
 tk = Tk()
 tk.resizable(False, False)  # Prevent window resizing
@@ -70,9 +152,11 @@ frames = []
 
 home_frame = Frame(tk, width=600, height=500)
 search_frame = Frame(tk, width=600, height=500)
+loading_frame = Frame(tk, width=600, height=500)
 
 frames.append(home_frame)
 frames.append(search_frame)
+frames.append(loading_frame)
 
 for frame in frames:
     frame.grid(row=0, column=0, sticky="nsew")
@@ -85,24 +169,41 @@ search_canvas = Canvas(search_frame, width=600, height=500, bd=0, bg='#ADD8E6') 
 search_canvas.pack() # Pack is used to display objects in the window
 search_canvas.update() # Needed to get the rendered canvas size 
 
+loading_canvas = Canvas(loading_frame, width=600, height=500, bd=0, bg='#ADD8E6') #change to ivory
+loading_canvas.pack() # Pack is used to display objects in the window
+loading_canvas.update() # Needed to get the rendered canvas size 
+
 search_text = Textbox(home_canvas, 'white')
 
 home_lbl = AnLabel(home_canvas, 'white')
 search_lbl = AnLabel(search_canvas, 'white', None, 20)
+load_lbl = AnLabel(loading_canvas, 'white')
+load_lbl.label.config(text = "Loading...") 
 
 # Function to print the textbox content
 def print_textbox_content():
     inp = search_text.textbox.get() 
     if len(inp) > 0:
-        show_frame(search_frame)
 
-        search_lbl.label.config(text = "Sarching For: "+inp) 
+        show_frame(loading_frame)
+
+        search_lbl.label.config(text = "Searching For: "+inp) 
 
         result_lbl = AnLabel(search_canvas, 'white', None, 75)
 
-        result = app_search(inp)
+        results = app_search(inp)
 
-        result_lbl.label.config(text = result[0]['appId'])
+        show_frame(search_frame)
+
+        i = 0
+
+        for result in results:
+            AppResult(search_canvas, result, i)
+            i = i + 1
+
+        #result_lbl.label.config(text = '')
+
+        #result_lbl.label.config(text = result[0]['appId'])
 
         
     else:
@@ -115,6 +216,7 @@ def back_home():
 search_button = MyButton(home_canvas, 'white', print_textbox_content, "Search App")
 
 back_button = MyButton(search_canvas, 'b', back_home, "Back to search", 50, 20)
+cancel_button = MyButton(loading_canvas, 'b', back_home, "Cancel", 50, 20)
 
 title = home_canvas.create_text(
         home_canvas.winfo_width()/2, 40,
@@ -131,7 +233,14 @@ subtitle = home_canvas.create_text(
     )
 
 
-show_frame(home_frame)
+loading_symbol = LoadBar(loading_canvas,"gray")
 
+# Animation loop
+def animate():
+    loading_symbol.animate_load()
+    tk.after(10, animate)  # Schedule next update in 10ms
+
+show_frame(home_frame)
+animate()
 
 tk.mainloop()
