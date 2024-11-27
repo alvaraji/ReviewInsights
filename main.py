@@ -1,6 +1,6 @@
 from tkinter import *
 from web_scrape import app_search
-from time import sleep
+from image_render import show_image_from_url
 
 class Ball:
     def __init__(self, canvas, wall, width, color, speed):
@@ -82,6 +82,24 @@ class Textbox:
         self.id = self.canvas.create_window(canvas.winfo_width()/2, canvas.winfo_height()/2,window=self.textbox)
 
 
+class anImage:
+    def __init__(self,canvas,image, posx = None, posy = None):
+        self.canvas = canvas
+        self.image = image
+
+        if type(posx) == type(None):
+            self.posx = canvas.winfo_width()/2
+        else:
+            self.posx = posx
+        
+        if type(posy) == type(None):
+            self.posy = (canvas.winfo_height()/2) + 75
+        else:
+            self.posy = posy
+
+        self.label = Label(self.canvas, image = self.image, background=self.canvas.cget("background"))
+        self.id = self.canvas.create_window(self.posx, self.posy, window=self.label)
+
 class MyButton:
     def __init__(self, canvas, color, command, text, posx = None, posy = None):
         self.canvas = canvas
@@ -102,7 +120,7 @@ class MyButton:
         self.id = self.canvas.create_window(self.posx, self.posy, window=self.button)
 
 class AnLabel:
-    def __init__(self,canvas,color, posx = None, posy = None):
+    def __init__(self,canvas,color, posx = None, posy = None, text_var = None):
         self.canvas = canvas
         self.color = color
 
@@ -116,28 +134,45 @@ class AnLabel:
         else:
             self.posy = posy
 
-        self.label = Label(self.canvas, text = "", background=self.canvas.cget("background"))
+        if type(text_var) == type(None):
+            self.label = Label(self.canvas, text = "", background=self.canvas.cget("background"))
+        else:
+            self.label = Label(self.canvas, background=self.canvas.cget("background"), textvariable = text_var)
         self.id = self.canvas.create_window(self.posx, self.posy, window=self.label)
 
 
 class AppResult:
-    def __init__(self, canvas, app, y_pos = 0):
+    def __init__(self, canvas, y_pos = 0):
         self.ypos = y_pos
         self.canvas = canvas
         self.height = 100
         self.yanchor = 150
+        #self.name_value = StringVar()
+        #self.name_value.set("")
         self.body = self.canvas.create_rectangle(0,0,self.canvas.winfo_width(), self.height)
 
         self.name = AnLabel(self.canvas, "", 0, 0)
-        self.name.label.config(text = app["title"]) 
+        self.name.label.config(text = "test") 
         
-        self.name.label.place(x= 250 - self.name.label.winfo_width(), y =  ((self.yanchor + 10) + (self.height*y_pos)))
-        
+        self.name.label.place(x= 130 - self.name.label.winfo_width(), y =  ((self.yanchor + 10) + (self.height*y_pos)))
 
-        test = self.canvas.create_oval(0,0,15,15, fill="red")
-        self.canvas.move(test, 75, ((self.yanchor) + (self.height*y_pos)))
+        self.image = None
+    
 
         self.canvas.move(self.body, 0, (self.yanchor + (self.height*y_pos)))
+    
+    def set_name(self, name):
+        formatted_name = '==  '+name+'  '+ '='*( 75 - len(name))
+        self.name.label.config(self.name.label.config(text = formatted_name))
+    
+    def set_image(self, image):
+        app_image = show_image_from_url(image, (100, 90))
+        self.image = anImage(self.canvas, app_image, 0, 0)
+        self.image.label.image = self.image.image
+        
+
+        self.image.label.place(x=0, y =  ((self.yanchor + 2) + (self.height*self.ypos)))
+
         
 
 # Create the main window and canvas
@@ -194,12 +229,17 @@ def print_textbox_content():
         results = app_search(inp)
 
         show_frame(search_frame)
+        
+        apps = []
 
-        i = 0
+        for i in range(0 , len(results)):
+            apps.append(AppResult(search_canvas, i))
+            apps[i].set_name(results[i]['title'])
+            apps[i].set_image(results[i]['icon'])
+        
+        search_frame.update()
+        
 
-        for result in results:
-            AppResult(search_canvas, result, i)
-            i = i + 1
 
         #result_lbl.label.config(text = '')
 
