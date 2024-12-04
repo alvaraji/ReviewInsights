@@ -53,14 +53,14 @@ def good_bad_interst_split(vaders):
 def summarize(comments, amount = 10):
     interest_str = ""
 
-    for index, review in comments.head(10).iterrows():
+    for index, review in comments.head(15).iterrows():
         interest_str = interest_str + review['content'] + " "
 
     interest_str = interest_str.strip()
 
     summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
-    output = summarizer(interest_str, max_length=130, min_length=30, do_sample=True)
+    output = summarizer(interest_str, max_length=90, min_length=30, do_sample=True)
 
     return output[0]['summary_text']
 

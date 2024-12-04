@@ -205,28 +205,144 @@ class AppResult:
 
         self.good_r, self.bad_r, self.interesting_r = good_bad_interst_split(scored_reviews)
 
-        self.summary = AnLabel(analysis_canvas, 'white')
+        self.summary = AnLabel(analysis_canvas, 'white', 350, 150)
 
-        self.summary.label.config(text = summarize(self.good_r), wraplength=100) 
+        summary_text = AnLabel(analysis_canvas, "b", 80, 150)
 
+        summary_text.label.config(text="Summary:")
+
+        self.res_flag = "pos"
+        self.review_list = []
 
         pos_result = MyButton(analysis_canvas, 'white', self.show_good, "Positive Results", 80, 100)
         neg_result = MyButton(analysis_canvas, 'white', self.show_bad, "Negative Results", 300, 100)
         int_result = MyButton(analysis_canvas, 'white', self.show_interesting, "Interesting Results", 500, 100)
 
+        self.good_rev = summarize(self.good_r)
+        self.bad_rev = summarize(self.bad_r)
+        self.int_rev = summarize(self.interesting_r)
+
+        self.body = analysis_canvas.create_rectangle(0,0,self.canvas.winfo_width(), 200)
+
+        self.y_offset = 55
+
+        label_y = 225
+
+        review_num_label_1 = AnLabel(analysis_canvas, "", 80, label_y)
+        review_num_label_1.label.config(text="1) ")
+        review_num_label_2 = AnLabel(analysis_canvas, "", 80, label_y+(self.y_offset))
+        review_num_label_2.label.config(text="2) ")
+        review_num_label_3 = AnLabel(analysis_canvas, "", 80, label_y+(2*self.y_offset))
+        review_num_label_3.label.config(text="3) ")
+        review_num_label_4 = AnLabel(analysis_canvas, "", 80, label_y+(3*self.y_offset))
+        review_num_label_4.label.config(text="4) ")
+        review_num_label_5 = AnLabel(analysis_canvas, "", 80, label_y+(4*self.y_offset))
+        review_num_label_5.label.config(text="5) ")
+
+
+        self.show_good(init_flag=True)
 
         show_frame(analysis_frame)
-    
 
-    def show_good(self):
-        pass
+
+    def show_good(self, init_flag = False):
+
+        if self.res_flag != "pos" or init_flag:
+
+            if not(init_flag):
+                self.summary.label.destroy()
+                self.summary = AnLabel(analysis_canvas, 'white', 350, 150)
+            
+
+                for review in self.review_list:
+                        review.label.destroy()
+                        analysis_canvas.delete(review)
+
+            
+            self.res_flag = "pos"
+            self.summary.label.config(text = self.good_rev, wraplength=400) 
+
+            self.review_list.clear()
+            
+            analysis_canvas.update()
+
+            index = 0
+
+            for _, review in self.good_r.head().iterrows():
+                current_review = AnLabel(analysis_canvas, "", 350, 225+(index*self.y_offset))
+                current_review.label.config(text=review["content"], wraplength=375)
+                self.review_list.append(current_review)
+                index = index + 1
+
+        else:
+            pass 
 
     def show_bad(self):
-        pass
+        if self.res_flag != "neg":
+            
+            self.summary.label.destroy()
+            self.summary = AnLabel(analysis_canvas, 'white', 350, 150)
+
+            self.res_flag = "neg"
+            self.summary.label.config(text = self.bad_rev, wraplength=375) 
+
+           
+
+            for review in self.review_list:
+                    review.label.destroy()
+                    analysis_canvas.delete(review)
+
+            
+            
+
+            self.review_list.clear()
+            
+            analysis_canvas.update()
+
+            index = 0
+
+            for _, review in self.bad_r.head().iterrows():
+                current_review = AnLabel(analysis_canvas, "", 350, 225+(index*self.y_offset))
+                current_review.label.config(text=review["content"], wraplength=375)
+                self.review_list.append(current_review)
+                index = index + 1
+
+        else:
+            pass 
 
     def show_interesting(self):
-        pass
+        if self.res_flag != "int":
 
+            self.summary.label.destroy()
+            self.summary = AnLabel(analysis_canvas, 'white', 350, 150)
+
+            self.res_flag = "int"
+            self.summary.label.config(text = self.int_rev, wraplength=375) 
+
+           
+
+            for review in self.review_list:
+                    review.label.destroy()
+                    analysis_canvas.delete(review)
+
+            
+            
+
+            self.review_list.clear()
+            
+            analysis_canvas.update()
+
+            index = 0
+
+            for _, review in self.interesting_r.head().iterrows():
+                current_review = AnLabel(analysis_canvas, "", 350, 225+(index*self.y_offset))
+                current_review.label.config(text=review["content"], wraplength=375)
+                self.review_list.append(current_review)
+                index = index + 1
+
+        else:
+            pass 
+        
 def show_frame(frame):
     frame.tkraise()
 
@@ -268,6 +384,10 @@ def back_home():
 def back_to_results():
     current_result.current.summary.label.destroy()
     analysis_canvas.delete(current_result.current.summary)
+    for review in current_result.current.review_list:
+        review.label.destroy()
+        analysis_canvas.delete(review)
+    current_result.current.review_list.clear()
     analysis_canvas.update()
     show_frame(search_frame)
 
