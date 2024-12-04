@@ -4,7 +4,7 @@ from google_play_scraper import Sort
 from google_play_scraper import search
 
 
-def app_search(app_name, num_results = 2):
+def app_search(app_name, num_results = 5):
     result = search(
         f"{app_name}",
         lang="en",  # defaults to 'en'

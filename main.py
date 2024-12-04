@@ -83,9 +83,10 @@ class Textbox:
 
 
 class anImage:
-    def __init__(self,canvas,image, posx = None, posy = None):
+    def __init__(self,canvas,image, posx = None, posy = None, frame = None):
         self.canvas = canvas
         self.image = image
+        self.frame = frame
 
         if type(posx) == type(None):
             self.posx = canvas.winfo_width()/2
@@ -97,7 +98,10 @@ class anImage:
         else:
             self.posy = posy
 
-        self.label = Label(self.canvas, image = self.image, background=self.canvas.cget("background"))
+        if type(self.frame) == type(None):
+            self.label = Label(self.canvas, image = self.image, background=self.canvas.cget("background"))
+        else:
+            self.label = Label(self.frame, image = self.image, background=self.canvas.cget("background"))
         self.id = self.canvas.create_window(self.posx, self.posy, window=self.label)
 
 class MyButton:
@@ -120,9 +124,10 @@ class MyButton:
         self.id = self.canvas.create_window(self.posx, self.posy, window=self.button)
 
 class AnLabel:
-    def __init__(self,canvas,color, posx = None, posy = None, text_var = None):
+    def __init__(self,canvas,color, posx = None, posy = None, text_var = None, frame = None):
         self.canvas = canvas
         self.color = color
+        self.frame = frame
 
         if type(posx) == type(None):
             self.posx = canvas.winfo_width()/2
@@ -134,27 +139,33 @@ class AnLabel:
         else:
             self.posy = posy
 
-        if type(text_var) == type(None):
+        if (type(text_var) == type(None)) and (type(frame) == type(None)):
             self.label = Label(self.canvas, text = "", background=self.canvas.cget("background"))
-        else:
+        elif (type(text_var) == type(None)):
+            self.label = Label(self.frame, text = "", background=self.canvas.cget("background"))
+        elif type(frame) == type(None):
             self.label = Label(self.canvas, background=self.canvas.cget("background"), textvariable = text_var)
+        else:
+            self.label = Label(self.frame, background=self.canvas.cget("background"), textvariable = text_var)
         self.id = self.canvas.create_window(self.posx, self.posy, window=self.label)
 
 
 class AppResult:
-    def __init__(self, canvas, y_pos = 0):
+    def __init__(self, canvas, app_id, y_pos = 0, frame = None):
         self.ypos = y_pos
         self.canvas = canvas
         self.height = 100
         self.yanchor = 150
-        #self.name_value = StringVar()
-        #self.name_value.set("")
+        self.id = app_id
+        self.frame = frame
         self.body = self.canvas.create_rectangle(0,0,self.canvas.winfo_width(), self.height)
 
-        self.name = AnLabel(self.canvas, "", 0, 0)
-        self.name.label.config(text = "test") 
+        placeholder_name = '==  '+""+'  '+ '='*75
+
+        self.name = AnLabel(self.canvas, placeholder_name, 400, ((self.yanchor + 20) + (self.height*y_pos)), frame=self.frame)
+        #self.name.label.config(text = "test") 
         
-        self.name.label.place(x= 130 - self.name.label.winfo_width(), y =  ((self.yanchor + 10) + (self.height*y_pos)))
+        #self.name.label.place(x= 130 - self.name.label.winfo_width(), y =  ((self.yanchor + 10) + (self.height*y_pos)))
 
         self.image = None
     
@@ -167,18 +178,19 @@ class AppResult:
     
     def set_image(self, image):
         app_image = show_image_from_url(image, (100, 90))
-        self.image = anImage(self.canvas, app_image, 0, 0)
+        self.image = anImage(self.canvas, app_image, 50, (50 +((self.yanchor + 2) + (self.height*self.ypos))), self.frame)
         self.image.label.image = self.image.image
         
 
-        self.image.label.place(x=0, y =  ((self.yanchor + 2) + (self.height*self.ypos)))
+        #self.image.label.place(x=0, y =  ((self.yanchor + 2) + (self.height*self.ypos)))
 
-        
+
 
 # Create the main window and canvas
 tk = Tk()
 tk.resizable(False, False)  # Prevent window resizing
 tk.title("Review Insights")
+
 
 def show_frame(frame):
     frame.tkraise()
@@ -188,10 +200,12 @@ frames = []
 home_frame = Frame(tk, width=600, height=500)
 search_frame = Frame(tk, width=600, height=500)
 loading_frame = Frame(tk, width=600, height=500)
+analysis_frame = Frame(tk, width=600, height=500)
 
 frames.append(home_frame)
 frames.append(search_frame)
 frames.append(loading_frame)
+frames.append(analysis_frame)
 
 for frame in frames:
     frame.grid(row=0, column=0, sticky="nsew")
@@ -201,12 +215,26 @@ home_canvas.pack() # Pack is used to display objects in the window
 home_canvas.update() # Needed to get the rendered canvas size 
 
 search_canvas = Canvas(search_frame, width=600, height=500, bd=0, bg='#ADD8E6') #change to ivory
-search_canvas.pack() # Pack is used to display objects in the window
+search_canvas.pack(side="left", fill="both", expand=True) # Pack is used to display objects in the window
 search_canvas.update() # Needed to get the rendered canvas size 
 
 loading_canvas = Canvas(loading_frame, width=600, height=500, bd=0, bg='#ADD8E6') #change to ivory
 loading_canvas.pack() # Pack is used to display objects in the window
 loading_canvas.update() # Needed to get the rendered canvas size 
+
+analysis_canvas = Canvas(analysis_frame, width=600, height=500, bd=0, bg='#ADD8E6') #change to ivory
+analysis_canvas.pack() # Pack is used to display objects in the window
+analysis_canvas.update() # Needed to get the rendered canvas size 
+
+# Add a scrollbar to the canvas
+scrollbar = Scrollbar(search_frame, orient="vertical", command=search_canvas.yview)
+scrollbar.pack(side="right", fill="y")
+
+# Add mousewheel scrolling support
+def on_mouse_wheel(event):
+        search_canvas.yview_scroll(-1 * int(event.delta / 120), "units")
+
+search_canvas.bind_all("<MouseWheel>", on_mouse_wheel)
 
 search_text = Textbox(home_canvas, 'white')
 
@@ -214,6 +242,10 @@ home_lbl = AnLabel(home_canvas, 'white')
 search_lbl = AnLabel(search_canvas, 'white', None, 20)
 load_lbl = AnLabel(loading_canvas, 'white')
 load_lbl.label.config(text = "Loading...") 
+
+# Create a frame inside the canvas for content
+search_content_frame = Frame(search_canvas)
+search_canvas.create_window((0, 0), window=search_content_frame, anchor="nw")
 
 # Function to print the textbox content
 def print_textbox_content():
@@ -224,8 +256,6 @@ def print_textbox_content():
 
         search_lbl.label.config(text = "Searching For: "+inp) 
 
-        result_lbl = AnLabel(search_canvas, 'white', None, 75)
-
         results = app_search(inp)
 
         show_frame(search_frame)
@@ -233,17 +263,11 @@ def print_textbox_content():
         apps = []
 
         for i in range(0 , len(results)):
-            apps.append(AppResult(search_canvas, i))
+            apps.append(AppResult(search_canvas, results[i]['appId'], i))
             apps[i].set_name(results[i]['title'])
             apps[i].set_image(results[i]['icon'])
         
         search_frame.update()
-        
-
-
-        #result_lbl.label.config(text = '')
-
-        #result_lbl.label.config(text = result[0]['appId'])
 
         
     else:
