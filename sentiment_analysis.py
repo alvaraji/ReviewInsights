@@ -4,13 +4,13 @@ import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
 from tqdm.notebook import tqdm
 from transformers import pipeline
+import os
+from initial_config import run_config
 
-nltk.download('punkt_tab')
-nltk.download('averaged_perceptron_tagger_eng')
-nltk.download('words')
-nltk.download('maxent_ne_chunker_tab')
-nltk.download('vader_lexicon')
-
+if os.path.isfile("initial.txt"):
+    pass
+else:
+    run_config()
 
 def analyze(df):
 
@@ -61,9 +61,9 @@ def summarize(comments, amount = 10):
     summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
     output = summarizer(interest_str, max_length=130, min_length=30, do_sample=True)
-    
-    print(output)
 
-    return output
+    return output[0]['summary_text']
+
+
 
     

@@ -1,6 +1,8 @@
 from tkinter import *
-from web_scrape import app_search
+from web_scrape import app_search, get_reviews
 from image_render import show_image_from_url
+import pandas as pd
+from sentiment_analysis import analyze, good_bad_interst_split, summarize
 
 class Ball:
     def __init__(self, canvas, wall, width, color, speed):
@@ -149,30 +151,37 @@ class AnLabel:
             self.label = Label(self.frame, background=self.canvas.cget("background"), textvariable = text_var)
         self.id = self.canvas.create_window(self.posx, self.posy, window=self.label)
 
+class Selected:
+    def __init__(self):
+        self.current = None
+    
+    def change(self, newCurrent):
+        self.current = newCurrent
 
 class AppResult:
-    def __init__(self, canvas, app_id, y_pos = 0, frame = None):
+    def __init__(self, canvas, app_id, y_pos = 0, frame = None, current_selected = None):
         self.ypos = y_pos
         self.canvas = canvas
         self.height = 100
         self.yanchor = 150
         self.id = app_id
+        self.current_selected = current_result
         self.frame = frame
         self.body = self.canvas.create_rectangle(0,0,self.canvas.winfo_width(), self.height)
+        self.app_name = "Blank"
 
         placeholder_name = '==  '+""+'  '+ '='*75
 
         self.name = AnLabel(self.canvas, placeholder_name, 400, ((self.yanchor + 20) + (self.height*y_pos)), frame=self.frame)
-        #self.name.label.config(text = "test") 
-        
-        #self.name.label.place(x= 130 - self.name.label.winfo_width(), y =  ((self.yanchor + 10) + (self.height*y_pos)))
 
         self.image = None
-    
 
         self.canvas.move(self.body, 0, (self.yanchor + (self.height*y_pos)))
+
+        self.select_button = MyButton(self.canvas, 'white', self.select_result, "Select", 400, ((self.yanchor + 50) + (self.height*y_pos)))
     
     def set_name(self, name):
+        self.app_name = name
         formatted_name = '==  '+name+'  '+ '='*( 75 - len(name))
         self.name.label.config(self.name.label.config(text = formatted_name))
     
@@ -182,18 +191,97 @@ class AppResult:
         self.image.label.image = self.image.image
         
 
-        #self.image.label.place(x=0, y =  ((self.yanchor + 2) + (self.height*self.ypos)))
+    def select_result(self):
+        
+        show_frame(loading_frame)
+
+        self.current_selected.change(self)
+
+        analysis_lbl.label.config(text = self.app_name, font=("Helvetica", 20))
+
+        reviews_df = get_reviews(self.app_name, self.id)
+        
+        scored_reviews = analyze(reviews_df)
+
+        self.good_r, self.bad_r, self.interesting_r = good_bad_interst_split(scored_reviews)
+
+        self.summary = AnLabel(analysis_canvas, 'white')
+
+        self.summary.label.config(text = summarize(self.good_r), wraplength=100) 
 
 
+        pos_result = MyButton(analysis_canvas, 'white', self.show_good, "Positive Results", 80, 100)
+        neg_result = MyButton(analysis_canvas, 'white', self.show_bad, "Negative Results", 300, 100)
+        int_result = MyButton(analysis_canvas, 'white', self.show_interesting, "Interesting Results", 500, 100)
+
+
+        show_frame(analysis_frame)
+    
+
+    def show_good(self):
+        pass
+
+    def show_bad(self):
+        pass
+
+    def show_interesting(self):
+        pass
+
+def show_frame(frame):
+    frame.tkraise()
+
+# Add mousewheel scrolling support
+def on_mouse_wheel(event):
+        search_canvas.yview_scroll(-1 * int(event.delta / 120), "units")
+
+# Function to print the textbox content
+def print_textbox_content():
+    inp = search_text.textbox.get() 
+    if len(inp) > 0:
+
+        show_frame(loading_frame)
+
+        search_lbl.label.config(text = "Searching For: "+inp) 
+
+        results = app_search(inp)
+
+        show_frame(search_frame)
+        
+        apps = []
+
+        for i in range(0 , len(results)):
+            apps.append(AppResult(search_canvas, results[i]['appId'], i, current_selected=current_result))
+            apps[i].set_name(results[i]['title'])
+            apps[i].set_image(results[i]['icon'])
+        
+        search_frame.update()
+
+        
+    else:
+        home_lbl.label.config(text = "You must input an app name!") 
+
+
+def back_home():
+    show_frame(home_frame)
+
+
+def back_to_results():
+    current_result.current.summary.label.destroy()
+    analysis_canvas.delete(current_result.current.summary)
+    analysis_canvas.update()
+    show_frame(search_frame)
+
+# Animation loop
+def animate():
+    loading_symbol.animate_load()
+    tk.after(10, animate)  # Schedule next update in 10ms
 
 # Create the main window and canvas
 tk = Tk()
 tk.resizable(False, False)  # Prevent window resizing
 tk.title("Review Insights")
 
-
-def show_frame(frame):
-    frame.tkraise()
+current_result = Selected()
 
 frames = []
 
@@ -230,10 +318,6 @@ analysis_canvas.update() # Needed to get the rendered canvas size
 scrollbar = Scrollbar(search_frame, orient="vertical", command=search_canvas.yview)
 scrollbar.pack(side="right", fill="y")
 
-# Add mousewheel scrolling support
-def on_mouse_wheel(event):
-        search_canvas.yview_scroll(-1 * int(event.delta / 120), "units")
-
 search_canvas.bind_all("<MouseWheel>", on_mouse_wheel)
 
 search_text = Textbox(home_canvas, 'white')
@@ -241,46 +325,18 @@ search_text = Textbox(home_canvas, 'white')
 home_lbl = AnLabel(home_canvas, 'white')
 search_lbl = AnLabel(search_canvas, 'white', None, 20)
 load_lbl = AnLabel(loading_canvas, 'white')
+analysis_lbl = AnLabel(analysis_canvas, 'white', analysis_canvas.winfo_width()/2, 60)
 load_lbl.label.config(text = "Loading...") 
 
 # Create a frame inside the canvas for content
 search_content_frame = Frame(search_canvas)
 search_canvas.create_window((0, 0), window=search_content_frame, anchor="nw")
 
-# Function to print the textbox content
-def print_textbox_content():
-    inp = search_text.textbox.get() 
-    if len(inp) > 0:
-
-        show_frame(loading_frame)
-
-        search_lbl.label.config(text = "Searching For: "+inp) 
-
-        results = app_search(inp)
-
-        show_frame(search_frame)
-        
-        apps = []
-
-        for i in range(0 , len(results)):
-            apps.append(AppResult(search_canvas, results[i]['appId'], i))
-            apps[i].set_name(results[i]['title'])
-            apps[i].set_image(results[i]['icon'])
-        
-        search_frame.update()
-
-        
-    else:
-        home_lbl.label.config(text = "You must input an app name!") 
-
-
-def back_home():
-    show_frame(home_frame)
-
 search_button = MyButton(home_canvas, 'white', print_textbox_content, "Search App")
 
 back_button = MyButton(search_canvas, 'b', back_home, "Back to search", 50, 20)
 cancel_button = MyButton(loading_canvas, 'b', back_home, "Cancel", 50, 20)
+results_button = MyButton(analysis_canvas, 'b', back_to_results, "Back to Results", 50, 20)
 
 title = home_canvas.create_text(
         home_canvas.winfo_width()/2, 40,
@@ -298,11 +354,6 @@ subtitle = home_canvas.create_text(
 
 
 loading_symbol = LoadBar(loading_canvas,"gray")
-
-# Animation loop
-def animate():
-    loading_symbol.animate_load()
-    tk.after(10, animate)  # Schedule next update in 10ms
 
 show_frame(home_frame)
 animate()
