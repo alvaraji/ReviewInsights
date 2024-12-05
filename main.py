@@ -60,6 +60,7 @@ class AppResult:
 
         self.res_flag = "pos"
         self.review_list = []
+        self.score_list = []
 
         pos_result = MyButton(analysis_canvas, 'white', self.show_good, "Positive Results", 80, 100)
         neg_result = MyButton(analysis_canvas, 'white', self.show_bad, "Negative Results", 300, 100)
@@ -105,11 +106,16 @@ class AppResult:
                         review.label.destroy()
                         analysis_canvas.delete(review)
 
+                for score in self.score_list:
+                        score.label.destroy()
+                        analysis_canvas.delete(score)
+
             
             self.res_flag = "pos"
             self.summary.label.config(text = self.good_rev, wraplength=400) 
 
             self.review_list.clear()
+            self.score_list.clear()
             
             analysis_canvas.update()
 
@@ -118,7 +124,10 @@ class AppResult:
             for _, review in self.good_r.head().iterrows():
                 current_review = AnLabel(analysis_canvas, "", 350, 225+(index*self.y_offset))
                 current_review.label.config(text=review["content"], wraplength=375)
+                current_score = AnLabel(analysis_canvas, "", 80, 250+(index*self.y_offset))
+                current_score.label.config(text=f"score: {review["score"]}/5", wraplength=375)
                 self.review_list.append(current_review)
+                self.score_list.append(current_score)
                 index = index + 1
 
         else:
@@ -139,10 +148,13 @@ class AppResult:
                     review.label.destroy()
                     analysis_canvas.delete(review)
 
-            
+            for score in self.score_list:
+                        score.label.destroy()
+                        analysis_canvas.delete(score)            
             
 
             self.review_list.clear()
+            self.score_list.clear()
             
             analysis_canvas.update()
 
@@ -151,7 +163,10 @@ class AppResult:
             for _, review in self.bad_r.head().iterrows():
                 current_review = AnLabel(analysis_canvas, "", 350, 225+(index*self.y_offset))
                 current_review.label.config(text=review["content"], wraplength=375)
+                current_score = AnLabel(analysis_canvas, "", 80, 250+(index*self.y_offset))
+                current_score.label.config(text=f"score: {review["score"]}/5", wraplength=375)
                 self.review_list.append(current_review)
+                self.score_list.append(current_score)
                 index = index + 1
 
         else:
@@ -172,10 +187,13 @@ class AppResult:
                     review.label.destroy()
                     analysis_canvas.delete(review)
 
-            
+            for score in self.score_list:
+                        score.label.destroy()
+                        analysis_canvas.delete(score)
             
 
             self.review_list.clear()
+            self.score_list.clear()
             
             analysis_canvas.update()
 
@@ -184,7 +202,10 @@ class AppResult:
             for _, review in self.interesting_r.head().iterrows():
                 current_review = AnLabel(analysis_canvas, "", 350, 225+(index*self.y_offset))
                 current_review.label.config(text=review["content"], wraplength=375)
+                current_score = AnLabel(analysis_canvas, "", 80, 250+(index*self.y_offset))
+                current_score.label.config(text=f"score: {review["score"]}/5", wraplength=375)
                 self.review_list.append(current_review)
+                self.score_list.append(current_score)
                 index = index + 1
 
         else:
