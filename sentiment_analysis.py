@@ -25,10 +25,24 @@ def summarize(comments, amount = 10):
 
     return output[0]['summary_text']
 
+
+def good_bad_interst_split(vaders):
+    bad_reviews = vaders.query('score == 1').sort_values('neg', ascending=False)
+    bad_reviews = bad_reviews[bad_reviews['content'].apply(len) > 30]
+
+    good_reviews = vaders.sort_values('pos', ascending=False)
+    good_reviews = good_reviews[good_reviews['content'].apply(len) > 30]
+
+    interest_good = vaders.query('score == 5').sort_values('neg', ascending=False)
+    interest_bad = vaders.query('score == 1').sort_values('pos', ascending=False)
+    interesting_reviews = pd.merge(interest_good.head(), interest_bad.head(), how='outer')
+
+    return (good_reviews, bad_reviews, interesting_reviews)
+
+
 #All code below is code modified from Kaggle Jupyter Notebook found at link below:
 # Mulla, R. (2022, May 5). Sentiment Analysis Python 🤗 [youtube tutorial]. Kaggle. 
 # https://www.kaggle.com/code/robikscube/sentiment-analysis-python-youtube-tutorial 
-
 
 def analyze(df):
 
@@ -53,23 +67,5 @@ def analyze(df):
 
     # Now we have sentiment score and metadata
     return vaders
-
-def good_bad_interst_split(vaders):
-    bad_reviews = vaders.query('score == 1').sort_values('neg', ascending=False)
-    bad_reviews = bad_reviews[bad_reviews['content'].apply(len) > 30]
-
-    good_reviews = vaders.sort_values('pos', ascending=False)
-    good_reviews = good_reviews[good_reviews['content'].apply(len) > 30]
-
-    interest_good = vaders.query('score == 5').sort_values('neg', ascending=False)
-    interest_bad = vaders.query('score == 1').sort_values('pos', ascending=False)
-    interesting_reviews = pd.merge(interest_good.head(), interest_bad.head(), how='outer')
-
-    return (good_reviews, bad_reviews, interesting_reviews)
-
-
-
-
-
 
     
