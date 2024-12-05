@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
-from tqdm.notebook import tqdm
 from transformers import pipeline
 import os
 from initial_config import run_config
@@ -37,7 +36,7 @@ def analyze(df):
 
     res = {}
 
-    for i, row in tqdm(df.iterrows(), total=len(df)):
+    for i, row in df.iterrows():
         text = row['content']
         myid = row['reviewId']
         res[myid] = sia.polarity_scores(text)
