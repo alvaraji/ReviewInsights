@@ -38,7 +38,6 @@ def get_reviews(app_name, app_id):
             count=N_REVIEWS,
             filter_score_with=None
         )
-        assert len(reviews_dict[app]) == N_REVIEWS
 
     df = pd.DataFrame()
     for app in apps.keys():

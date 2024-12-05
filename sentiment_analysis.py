@@ -11,10 +11,10 @@ if os.path.isfile("initial.txt"):
 else:
     run_config()
 
-def summarize(comments, amount = 10):
+def summarize(comments, amount = 15):
     interest_str = ""
 
-    for index, review in comments.head(15).iterrows():
+    for index, review in comments.head(amount).iterrows():
         interest_str = interest_str + review['content'] + " "
 
     interest_str = interest_str.strip()
