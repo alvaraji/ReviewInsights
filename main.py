@@ -125,7 +125,7 @@ class AppResult:
                 current_review = AnLabel(analysis_canvas, "", 350, 225+(index*self.y_offset))
                 current_review.label.config(text=review["content"], wraplength=375)
                 current_score = AnLabel(analysis_canvas, "", 80, 250+(index*self.y_offset))
-                current_score.label.config(text=f"score: {review["score"]}/5", wraplength=375)
+                current_score.label.config(text=f"score: {review['score']}/5", wraplength=375)
                 self.review_list.append(current_review)
                 self.score_list.append(current_score)
                 index = index + 1
@@ -164,7 +164,7 @@ class AppResult:
                 current_review = AnLabel(analysis_canvas, "", 350, 225+(index*self.y_offset))
                 current_review.label.config(text=review["content"], wraplength=375)
                 current_score = AnLabel(analysis_canvas, "", 80, 250+(index*self.y_offset))
-                current_score.label.config(text=f"score: {review["score"]}/5", wraplength=375)
+                current_score.label.config(text=f"score: {review['score']}/5", wraplength=375)
                 self.review_list.append(current_review)
                 self.score_list.append(current_score)
                 index = index + 1
@@ -203,7 +203,7 @@ class AppResult:
                 current_review = AnLabel(analysis_canvas, "", 350, 225+(index*self.y_offset))
                 current_review.label.config(text=review["content"], wraplength=375)
                 current_score = AnLabel(analysis_canvas, "", 80, 250+(index*self.y_offset))
-                current_score.label.config(text=f"score: {review["score"]}/5", wraplength=375)
+                current_score.label.config(text=f"score: {review['score']}/5", wraplength=375)
                 self.review_list.append(current_review)
                 self.score_list.append(current_score)
                 index = index + 1
