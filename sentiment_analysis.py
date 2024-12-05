@@ -12,6 +12,25 @@ if os.path.isfile("initial.txt"):
 else:
     run_config()
 
+def summarize(comments, amount = 10):
+    interest_str = ""
+
+    for index, review in comments.head(15).iterrows():
+        interest_str = interest_str + review['content'] + " "
+
+    interest_str = interest_str.strip()
+
+    summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+
+    output = summarizer(interest_str, max_length=90, min_length=30, do_sample=True)
+
+    return output[0]['summary_text']
+
+#All code below is code modified from Kaggle Jupyter Notebook found at link below:
+# Mulla, R. (2022, May 5). Sentiment Analysis Python 🤗 [youtube tutorial]. Kaggle. 
+# https://www.kaggle.com/code/robikscube/sentiment-analysis-python-youtube-tutorial 
+
+
 def analyze(df):
 
     sia = SentimentIntensityAnalyzer()
@@ -50,19 +69,7 @@ def good_bad_interst_split(vaders):
     return (good_reviews, bad_reviews, interesting_reviews)
 
 
-def summarize(comments, amount = 10):
-    interest_str = ""
 
-    for index, review in comments.head(15).iterrows():
-        interest_str = interest_str + review['content'] + " "
-
-    interest_str = interest_str.strip()
-
-    summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-
-    output = summarizer(interest_str, max_length=90, min_length=30, do_sample=True)
-
-    return output[0]['summary_text']
 
 
 

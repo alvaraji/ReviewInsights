@@ -4,6 +4,9 @@ from google_play_scraper import Sort
 from google_play_scraper import search
 import pandas as pd
 
+#Code Modified from Kaggle Jupyter Notebook found below:
+# Hasija , S. (2021, July 16). Play store app reviews scrapper (daily update). Kaggle. 
+# https://www.kaggle.com/code/odins0n/play-store-app-reviews-scrapper-daily-update  
 
 def app_search(app_name, num_results = 5):
     result = search(
